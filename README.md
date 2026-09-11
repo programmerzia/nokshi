@@ -302,8 +302,8 @@ memory = 0.5
 
 ## Development
 
-See [docs/GUIDE.md](docs/GUIDE.md) for the quick guide (daily usage + release process)
-and [CHANGELOG.md](CHANGELOG.md) for release notes.
+See [docs/GUIDE.md](docs/GUIDE.md) for the quick guide, [docs/RELEASING.md](docs/RELEASING.md)
+for the release process, and [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ```bash
 pip install -e ".[dev]"
