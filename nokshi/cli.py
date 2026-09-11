@@ -281,7 +281,10 @@ def cmd_context(args) -> None:
     if args.explain:
         table = Table(title="Ranking", show_lines=False)
         table.add_column("file"); table.add_column("rep"); table.add_column("score", justify="right"); table.add_column("signals")
-        for s in pkg.selections[: args.explain_limit]:
+        # sort by score, not by tier: the table is there to show what the ranker decided,
+        # and tier order hides a high-scoring file that failed to load as source.
+        ranked_sel = sorted(pkg.selections, key=lambda s: s.candidate.score, reverse=True)
+        for s in ranked_sel[: args.explain_limit]:
             sig = " ".join(f"{k}={v:.2f}" for k, v in sorted(s.candidate.signals.items(), key=lambda x: -x[1]))
             table.add_row(escape(s.candidate.path), s.representation, f"{s.candidate.score:.2f}", sig)
         err.print(table)

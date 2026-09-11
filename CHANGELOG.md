@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] — 2026-09-11
+
+### Fixed
+
+- **`--explain` now lists files by score instead of by tier.** Tier order put a loaded file
+  above a higher-scoring one that failed to load, which hid exactly the kind of bug 0.3.2
+  fixed. The table exists to show what the ranker decided, so it now shows that.
+
+
 ## [0.3.2] — 2026-09-11
 
 ### Fixed
@@ -76,7 +85,8 @@ First public release.
 - **Safety** — secrets never indexed, `redact()` over outbound content, and no network
   access from `context`, `search`, `graph` or any `--dry-run`.
 
-[Unreleased]: https://github.com/programmerzia/nokshi/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/programmerzia/nokshi/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/programmerzia/nokshi/releases/tag/v0.3.3
 [0.3.2]: https://github.com/programmerzia/nokshi/releases/tag/v0.3.2
 [0.3.1]: https://github.com/programmerzia/nokshi/releases/tag/v0.3.1
 [0.3.0]: https://github.com/programmerzia/nokshi/releases/tag/v0.3.0
