@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] — 2026-09-11
+
+Context quality: a vague task used to spend the whole budget on noise and say nothing
+about it. It now costs less, says so, and tells you what to do instead.
+
+### Fixed
+
+- **Licence and attribution text is never indexed.** `LICENSE`, `COPYING`, `NOTICE`,
+  `OFL.txt`, `AUTHORS` and friends are attribution, not engineering context; one could
+  previously reach the full-source tier and spend ~1k tokens on a font licence.
+- **The full-source tier now has an absolute score floor**, not only a floor relative to
+  the best match. 35% of a noise score is still noise, so on a task that matched nothing
+  the top file no longer gets loaded whole.
+- **Tests can no longer crowd out the source they test.** Tests share a module signal with
+  every sibling, so on a weak task a test-heavy repo filled the entire package with test
+  signatures. They are now capped at a third of the loaded files unless the task is about
+  tests, and the rest fall back to the file map.
+
+### Added
+
+- **A low-confidence warning.** When a task does not match any source well, `nokshi context`
+  now says so on stderr and suggests naming a file/class/module, forcing one in with `-f`,
+  or using `--signatures-only` for whole-repo questions — instead of returning a weak guess
+  with no indication that it is one. Confidence is measured against the best *source* match,
+  so a large design doc at the top of the ranking no longer masks a failed retrieval.
+
+
 ## [0.3.0] — 2026-09-11
 
 First public release.
@@ -36,5 +63,6 @@ First public release.
 - **Safety** — secrets never indexed, `redact()` over outbound content, and no network
   access from `context`, `search`, `graph` or any `--dry-run`.
 
-[Unreleased]: https://github.com/programmerzia/nokshi/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/programmerzia/nokshi/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/programmerzia/nokshi/releases/tag/v0.3.1
 [0.3.0]: https://github.com/programmerzia/nokshi/releases/tag/v0.3.0

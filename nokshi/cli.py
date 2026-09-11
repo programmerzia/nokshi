@@ -18,7 +18,7 @@ from rich.table import Table
 from nokshi import __version__
 from nokshi import memory as memory_mod
 from nokshi.agents.providers import SYSTEM_PROMPTS, ProviderError, complete
-from nokshi.context.builder import build_context, changed_files_from_diff
+from nokshi.context.builder import CONFIDENT_SCORE, build_context, changed_files_from_diff
 from nokshi.context.summaries import summarize_files
 from nokshi.core import tokens
 from nokshi.core.config import Config, load_config, write_default_config
@@ -100,6 +100,16 @@ def _print_context_report(pkg) -> None:
                   f"({pkg.baseline_tokens:,} → {pkg.tokens:,})")
     if pkg.truncated:
         err.print("[yellow]! Context truncated to fit budget[/yellow]")
+    if pkg.top_score < CONFIDENT_SCORE:
+        why = ("[yellow]! No file matched this task[/yellow]" if not pkg.selections
+               else f"[yellow]! Low confidence[/yellow] (best match scored {pkg.top_score:.2f}); "
+                    "the files below are a weak guess")
+        err.print(
+            f"{why} — the task did not name anything Nokshi could find.\n"
+            "  Name a file, class or module in the task (e.g. \"...in PaymentService\"), or force one in "
+            "with -f <path>.\n"
+            "  For a whole-repo question, try --signatures-only, or `nokshi status` for the module map."
+        )
 
 
 def cfg_reserve(pkg) -> int:

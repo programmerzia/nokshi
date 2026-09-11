@@ -1,0 +1,54 @@
+# Nokshi project configuration — commit this file.
+
+[index]
+# Extra directories / glob patterns to skip (added to built-in defaults).
+ignore_dirs = []
+ignore_files = []
+# Files above this size are indexed by metadata only (no symbol extraction).
+max_file_kb = 512
+
+[budget]
+# Token budgets per agent role (see roadmap §6). Enforced before any model call.
+planner = 6000
+developer = 16000
+reviewer = 10000
+# Default budget for `nokshi context` when --budget is not given.
+context = 12000
+# Tokens reserved for headers, rules and the task itself inside a package.
+reserve = 800
+
+[ranking]
+# Relative weights of the ranking signals. Tune per repository.
+lexical = 1.0
+explicit_reference = 3.0
+dependency = 0.6
+git_recency = 0.3
+module_match = 0.4
+test_relevance = 0.5
+memory = 0.5
+
+[run]
+# Command `nokshi run` uses to validate the agent's change inside the worktree.
+# Auto-detected (pest/phpunit/vitest/jest/pytest/dotnet test) when empty.
+test_command = ""
+test_timeout = 600
+# Heavy, git-ignored directories symlinked from your working tree into each worktree.
+symlink = ["vendor", "node_modules", ".venv"]
+# Maximum automatic retries when the patch fails to apply or tests fail.
+max_retries = 1
+
+[summaries]
+# `nokshi summarize` writes 2–3 sentence AI summaries for files with at least this many tokens,
+# using [provider].cheap_model. Summaries feed ranking and replace raw code in the signatures tier.
+min_tokens = 600
+# Parallel requests while summarizing.
+concurrency = 4
+
+[provider]
+# anthropic | openai | openrouter | local | none. API keys are read from the environment:
+# ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY. "local" talks to any OpenAI-compatible
+# server (Ollama, LM Studio, vLLM) at NOKSHI_API_BASE (default http://localhost:11434/v1).
+name = "anthropic"
+model = "claude-sonnet-4-6"
+# Cheaper model for summaries/classification (roadmap §16 "model routing").
+cheap_model = "claude-haiku-4-5-20251001"

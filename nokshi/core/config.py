@@ -31,6 +31,9 @@ DEFAULT_IGNORE_FILES = {
     # never index secrets
     ".env", ".env.*", "*.env", "*.pem", "*.key", "*.p12", "*.pfx", "*.jks", "id_rsa*", "*.secret",
     "secrets.json", "secrets.yaml", "secrets.yml", "*credentials*.json", ".npmrc", ".pypirc", ".netrc",
+    # legal / attribution text: never useful as engineering context
+    "LICENSE", "LICENSE.*", "LICENCE", "LICENCE.*", "COPYING", "COPYING.*", "NOTICE", "NOTICE.*",
+    "OFL.txt", "OFL-FAQ.txt", "AUTHORS", "PATENTS", "CODE_OF_CONDUCT.md", "*.LICENSE.txt",
 }
 
 DEFAULT_CONFIG_TOML = """# Nokshi project configuration — commit this file.

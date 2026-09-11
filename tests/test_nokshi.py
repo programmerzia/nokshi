@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from nokshi.agents.providers import estimate_cost
-from nokshi.context.builder import build_context, changed_files_from_diff, redact
+from nokshi.context.builder import CONFIDENT_SCORE, build_context, changed_files_from_diff, redact
 from nokshi.context.ranking import rank_files, tokenize
 from nokshi.core import tokens
 from nokshi.core.config import Config, load_config, write_default_config
@@ -17,7 +17,7 @@ from nokshi.core.db import Database
 from nokshi.core.graph import Graph
 from nokshi.core.parsers import language_for, parser_for
 from nokshi.core.parsers.base import blank_out_noise, split_identifier
-from nokshi.core.scanner import index_repository, is_test_path, module_of
+from nokshi.core.scanner import discover, index_repository, is_test_path, module_of
 
 # ---------------------------------------------------------------------------
 # fixtures
@@ -602,3 +602,71 @@ def test_cli_task_dry_run_and_version(repo: Path):
     assert run("analyze").returncode == 0
     r = run("task", "add refund", "--dry-run")
     assert r.returncode == 0 and "PLANNING" in r.stderr and "# Task" in r.stdout
+
+
+# ---------------------------------------------------------------------------
+# Vague-task guard rails: a task that matches nothing must not spend the budget
+# on noise, and must say so instead of quietly returning a weak guess.
+# ---------------------------------------------------------------------------
+
+def test_legal_text_is_never_indexed(repo: Path):
+    """A font/library licence is attribution text, not engineering context."""
+    (repo / "assets").mkdir(exist_ok=True)
+    (repo / "assets" / "OFL.txt").write_text("Copyright 2020 The Poppins Project Authors\n" + "licence " * 400)
+    (repo / "LICENSE").write_text("MIT License\n" + "permission " * 400)
+    cfg = load_config(repo)
+    write_default_config(cfg)
+    found = discover(cfg)
+    assert not any("OFL.txt" in f or f == "LICENSE" for f in found), found
+
+
+def test_a_vague_task_earns_no_full_source(indexed):
+    """35% of a noise score is still noise — the full-source tier needs an absolute floor."""
+    cfg, db = indexed
+    pkg = build_context(cfg, db, "make this project as a saas")
+    assert pkg.top_score < CONFIDENT_SCORE
+    assert not [s for s in pkg.selections if s.representation in ("full", "regions")], \
+        [(s.candidate.path, s.representation) for s in pkg.selections]
+
+
+def test_a_specific_task_still_gets_full_source(indexed):
+    """The floor must not punish a task that genuinely matches."""
+    cfg, db = indexed
+    pkg = build_context(cfg, db, "refund support in PaymentService")
+    assert pkg.top_score >= CONFIDENT_SCORE
+    assert [s for s in pkg.selections if s.representation in ("full", "regions")]
+
+
+def test_cli_warns_on_a_vague_task(repo: Path):
+    def run(*args):
+        return subprocess.run(["nokshi", "--root", str(repo), *args], capture_output=True, text=True, timeout=60)
+    assert run("analyze").returncode == 0
+    r = run("ctx", "make this project as a saas")
+    assert r.returncode == 0
+    # either branch of the guard is acceptable; what matters is that the user is told
+    # the task was too vague and what to do about it, instead of getting silent filler.
+    assert ("No file matched this task" in r.stderr) or ("Low confidence" in r.stderr)
+    assert "Name a file, class or module" in r.stderr
+    assert "--signatures-only" in r.stderr
+
+    # a task that does name something must stay quiet
+    r2 = run("ctx", "refund support in PaymentService")
+    assert r2.returncode == 0
+    assert "Low confidence" not in r2.stderr and "No file matched" not in r2.stderr
+
+
+def test_tests_cannot_crowd_out_the_source_they_test(indexed):
+    """Tests share a module signal with their siblings; on a weak task they must not fill the package."""
+    cfg, db = indexed
+    pkg = build_context(cfg, db, "refund support in PaymentService")
+    loaded = [s for s in pkg.selections if s.representation != "map"]
+    tests = [s for s in loaded if s.candidate.is_test]
+    assert len(tests) <= max(1, int(len(loaded) * 0.5)), [s.candidate.path for s in loaded]
+
+
+def test_a_task_about_tests_still_gets_tests(indexed):
+    """The cap must lift when the task is actually about tests."""
+    cfg, db = indexed
+    pkg = build_context(cfg, db, "add a regression test for PaymentService refunds")
+    loaded = [s for s in pkg.selections if s.representation != "map"]
+    assert any(s.candidate.is_test for s in loaded), [s.candidate.path for s in loaded]

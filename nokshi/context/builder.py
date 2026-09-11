@@ -17,10 +17,13 @@ from nokshi.context.ranking import Candidate, rank_files, tokenize
 from nokshi.core import tokens
 from nokshi.core.config import Config
 from nokshi.core.db import Database
-from nokshi.core.parsers import split_identifier
+from nokshi.core.parsers import STRUCTURAL_LANGUAGES, split_identifier
 
 FULL_TIER_MAX_FILES = 12          # never dump more than this many whole files
 FULL_SCORE_RATIO = 0.35           # a file must score ≥ 35% of the best to earn full source
+FULL_SCORE_MIN = 0.35             # ...and ≥ this absolute score: 35% of noise is still noise
+CONFIDENT_SCORE = 0.50            # below this, the task did not match the repo well enough
+TEST_SHARE_MAX = 0.34             # tests may fill at most this share of the loaded tiers
 FULL_TIER_SHARE = 0.70            # full/region tier may use at most this share of the content budget
 LARGE_FILE_TOKENS = 2500          # above this, prefer relevant regions over the whole file
 SIGNATURE_TIER_MAX = 30
@@ -48,6 +51,7 @@ class ContextPackage:
     considered_tokens: int = 0     # tokens of all candidate files
     truncated: bool = False
     reserve: int = 0
+    top_score: float = 0.0         # best *source* match; low means the task named nothing findable
 
     @property
     def files_full(self) -> list[str]:
@@ -209,6 +213,11 @@ def build_context(cfg: Config, db: Database, task: str, role: str = "context", b
     pending_sig: list[Candidate] = []
     pending_map: list[Candidate] = []
     best = ranked[0].score if ranked else 0.0
+    # Confidence = how well the task matched real source. Docs and tests score on generic
+    # English and on a module signal every sibling shares, so a doc at the top of the list
+    # says nothing about whether we found the code the user meant.
+    code_scores = [c.score for c in ranked if not c.is_test and c.language in STRUCTURAL_LANGUAGES]
+    top_code_score = max(code_scores) if code_scores else 0.0
 
     # Tier 1: full source (small files) or relevant regions (large files) for the strongest candidates
     query = set(tokenize(task))
@@ -216,7 +225,8 @@ def build_context(cfg: Config, db: Database, task: str, role: str = "context", b
     tier1_limit = used + int(content_budget * FULL_TIER_SHARE)
     full_count = 0
     for cand in ranked:
-        if full_count >= FULL_TIER_MAX_FILES or no_full or cand.score < best * FULL_SCORE_RATIO:
+        if (full_count >= FULL_TIER_MAX_FILES or no_full
+                or cand.score < best * FULL_SCORE_RATIO or cand.score < FULL_SCORE_MIN):
             pending_sig.append(cand)
             continue
         text = _read(cfg, cand.path)
@@ -241,7 +251,14 @@ def build_context(cfg: Config, db: Database, task: str, role: str = "context", b
             pending_sig.insert(0, cand)  # keep priority, fall back to signatures
 
     # Tier 2: summary + signatures
+    # Tests carry the same weak module signal as everything else, so on a vague task they can
+    # crowd out the source they are testing. Cap their share unless the task is about tests.
+    wants_tests = any(k in task.lower() for k in ("test", "spec", "coverage", "regression"))
+    tests_placed = sig_placed = 0
     for cand in pending_sig[:SIGNATURE_TIER_MAX]:
+        if cand.is_test and not wants_tests and tests_placed >= TEST_SHARE_MAX * (sig_placed + 1):
+            pending_map.append(cand)   # over their share: demote to the file map
+            continue
         sigs = _signatures(db, cand)
         if not sigs:
             pending_map.append(cand)
@@ -253,6 +270,8 @@ def build_context(cfg: Config, db: Database, task: str, role: str = "context", b
             body_parts.append(block)
             selections.append(Selection(cand, "signatures", cost))
             used += cost
+            sig_placed += 1
+            tests_placed += cand.is_test
         else:
             pending_map.append(cand)
     pending_map.extend(pending_sig[SIGNATURE_TIER_MAX:])
@@ -286,7 +305,7 @@ def build_context(cfg: Config, db: Database, task: str, role: str = "context", b
     pkg = ContextPackage(task=task, role=role, budget=budget, markdown=markdown, tokens=total_tokens,
                          considered=len(ranked), selections=selections, baseline_tokens=baseline,
                          considered_tokens=considered_tokens, truncated=truncated,
-                         reserve=cfg.budgets.reserve)
+                         reserve=cfg.budgets.reserve, top_score=top_code_score)
     db.log_context_run(task=task[:500], role=role, budget=budget, considered=len(ranked),
                        selected=len([s for s in selections if s.representation != "map"]),
                        tokens=total_tokens, baseline_tokens=baseline)
