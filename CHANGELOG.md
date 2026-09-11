@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] — 2026-09-11
+
+### Fixed
+
+- **A file named in the task now always contributes source.** Region extraction scores a
+  large file's symbols against the words in the task, but an *additive* task describes
+  something that does not exist yet — "add tenant_id scoping to harness/jobs.py" matches no
+  symbol, because `tenant_id` is precisely what is missing. The file the user pointed at
+  would then fall back to signatures and the model never saw the code it had to change.
+  When a file is explicitly referenced and nothing matches, its principal symbols (largest
+  bodies first) are shown instead.
+
+
 ## [0.3.1] — 2026-09-11
 
 Context quality: a vague task used to spend the whole budget on noise and say nothing
@@ -63,6 +76,7 @@ First public release.
 - **Safety** — secrets never indexed, `redact()` over outbound content, and no network
   access from `context`, `search`, `graph` or any `--dry-run`.
 
-[Unreleased]: https://github.com/programmerzia/nokshi/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/programmerzia/nokshi/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/programmerzia/nokshi/releases/tag/v0.3.2
 [0.3.1]: https://github.com/programmerzia/nokshi/releases/tag/v0.3.1
 [0.3.0]: https://github.com/programmerzia/nokshi/releases/tag/v0.3.0

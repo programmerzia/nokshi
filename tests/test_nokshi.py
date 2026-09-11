@@ -670,3 +670,15 @@ def test_a_task_about_tests_still_gets_tests(indexed):
     pkg = build_context(cfg, db, "add a regression test for PaymentService refunds")
     loaded = [s for s in pkg.selections if s.representation != "map"]
     assert any(s.candidate.is_test for s in loaded), [s.candidate.path for s in loaded]
+
+
+def test_a_named_file_contributes_source_even_when_the_task_is_additive(indexed):
+    """An "add X" task names something that does not exist yet, so no region matches X.
+
+    The file the user pointed at must still contribute source, not drop to signatures.
+    """
+    cfg, db = indexed
+    pkg = build_context(cfg, db, "add tenant_id scoping to app/Services/PaymentService.php")
+    named = [s for s in pkg.selections if s.candidate.path == "app/Services/PaymentService.php"]
+    assert named, [s.candidate.path for s in pkg.selections]
+    assert named[0].representation in ("full", "regions"), named[0].representation

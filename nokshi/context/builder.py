@@ -72,8 +72,15 @@ class ContextPackage:
         }, indent=2)
 
 
-def _regions(cfg: Config, db: Database, cand: Candidate, query: set[str], text: str) -> str | None:
-    """Level 3: only the symbol bodies relevant to the task, plus the enclosing declaration lines."""
+def _regions(cfg: Config, db: Database, cand: Candidate, query: set[str], text: str,
+             fallback: bool = False) -> str | None:
+    """Level 3: only the symbol bodies relevant to the task, plus the enclosing declaration lines.
+
+    `fallback` is for a file the task named outright. An additive task ("add tenant_id
+    scoping to harness/jobs.py") describes something that does not exist in the file yet,
+    so no symbol matches the query and the file the user actually pointed at would fall
+    back to signatures. In that case show its principal symbols instead of nothing.
+    """
     row = db.file_by_path(cand.path)
     if not row:
         return None
@@ -86,6 +93,10 @@ def _regions(cfg: Config, db: Database, cand: Candidate, query: set[str], text: 
         toks = set(split_identifier(s["name"]))
         if s["name"] in cand.matched_symbols or (toks & query):
             picked.append(s)
+    if not picked and fallback:
+        # biggest bodies first: the substance of the file, not its one-line accessors
+        picked = sorted((s for s in syms if s["kind"] not in ("property", "const")),
+                        key=lambda s: s["line_end"] - s["line_start"], reverse=True)[:6]
     if not picked:
         return None
     picked.sort(key=lambda s: s["line_start"])
@@ -240,7 +251,8 @@ def build_context(cfg: Config, db: Database, task: str, role: str = "context", b
                 body_parts.append(block); selections.append(Selection(cand, "full", cost))
                 used += cost; full_count += 1; placed = True
         if not placed:
-            regions = _regions(cfg, db, cand, query, text)
+            named = cand.signals.get("explicit_reference", 0) > 0
+            regions = _regions(cfg, db, cand, query, text, fallback=named)
             if regions:
                 block = f"\n## {cand.path}  (relevant regions of {cand.tokens} tokens)\n\n```{_fence(cand.language)}\n{regions}\n```\n"
                 cost = tokens.count(block)
