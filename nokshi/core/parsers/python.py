@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import ast
 
-from .base import Import, ParseResult, Parser, Symbol
+from .base import Import, Parser, ParseResult, Symbol
 
 
 def _sig(node: ast.AST, src_lines: list[str]) -> str:

@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import re
 
-from .base import (Import, ParseResult, Parser, Symbol, blank_out_noise, line_of, match_brace,
-                   signature_until_brace)
+from .base import Import, Parser, ParseResult, Symbol, blank_out_noise, line_of, match_brace, signature_until_brace
 
 _USING = re.compile(r"^\s*(?:global\s+)?using\s+(?:static\s+)?(?!var\s)([\w.]+)\s*;", re.M)
 _NS = re.compile(r"^\s*namespace\s+([\w.]+)", re.M)

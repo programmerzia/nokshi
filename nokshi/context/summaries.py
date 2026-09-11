@@ -12,13 +12,13 @@ package at a fraction of their token cost.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
-from typing import Callable
 
+from nokshi.agents.providers import SYSTEM_PROMPTS, Completion, ProviderError, complete
 from nokshi.core.config import Config
 from nokshi.core.db import Database
-from nokshi.agents.providers import SYSTEM_PROMPTS, Completion, ProviderError, complete
 
 EXCERPT_LINES = 80
 

@@ -11,9 +11,9 @@ from __future__ import annotations
 
 import sqlite3
 import time
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterable, Iterator
 
 SCHEMA = """
 PRAGMA journal_mode = WAL;

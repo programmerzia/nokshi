@@ -16,17 +16,26 @@ from rich.panel import Panel
 from rich.table import Table
 
 from nokshi import __version__
+from nokshi import memory as memory_mod
+from nokshi.agents.providers import SYSTEM_PROMPTS, ProviderError, complete
+from nokshi.context.builder import build_context, changed_files_from_diff
+from nokshi.context.summaries import summarize_files
 from nokshi.core import tokens
 from nokshi.core.config import Config, load_config, write_default_config
-from nokshi.context.builder import build_context, changed_files_from_diff
 from nokshi.core.db import Database
 from nokshi.core.graph import Graph
-from nokshi.agents.providers import SYSTEM_PROMPTS, ProviderError, complete
 from nokshi.core.scanner import _ignored, index_repository
-from nokshi.context.summaries import summarize_files
-from nokshi import memory as memory_mod
-from nokshi.workspace.worktree import (WorkspaceError, apply_changes, apply_to_working_tree, create_workspace,
-                        detect_test_command, list_workspaces, parse_agent_output, remove_workspace, run_tests)
+from nokshi.workspace.worktree import (
+    WorkspaceError,
+    apply_changes,
+    apply_to_working_tree,
+    create_workspace,
+    detect_test_command,
+    list_workspaces,
+    parse_agent_output,
+    remove_workspace,
+    run_tests,
+)
 
 # When output is piped (not a TTY) Rich would wrap at 80 columns and truncate paths; use a wide layout.
 console = Console(width=None if sys.stdout.isatty() else 160)

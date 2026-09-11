@@ -8,15 +8,15 @@ from pathlib import Path
 
 import pytest
 
+from nokshi.agents.providers import estimate_cost
+from nokshi.context.builder import build_context, changed_files_from_diff, redact
+from nokshi.context.ranking import rank_files, tokenize
 from nokshi.core import tokens
 from nokshi.core.config import Config, load_config, write_default_config
-from nokshi.context.builder import build_context, changed_files_from_diff, redact
 from nokshi.core.db import Database
 from nokshi.core.graph import Graph
 from nokshi.core.parsers import language_for, parser_for
 from nokshi.core.parsers.base import blank_out_noise, split_identifier
-from nokshi.agents.providers import estimate_cost
-from nokshi.context.ranking import rank_files, tokenize
 from nokshi.core.scanner import index_repository, is_test_path, module_of
 
 # ---------------------------------------------------------------------------
@@ -414,8 +414,16 @@ def test_cli_end_to_end(repo: Path):
 # workspace (nokshi run)
 # ---------------------------------------------------------------------------
 
-from nokshi.workspace.worktree import (apply_changes, apply_to_working_tree, create_workspace, detect_test_command,
-                                 list_workspaces, parse_agent_output, run_tests, slugify)
+from nokshi.workspace.worktree import (
+    apply_changes,
+    apply_to_working_tree,
+    create_workspace,
+    detect_test_command,
+    list_workspaces,
+    parse_agent_output,
+    run_tests,
+    slugify,
+)
 
 AGENT_OUTPUT = '''Here is the change.
 
@@ -534,8 +542,8 @@ def test_cli_run_dry_and_workspaces(repo: Path):
 # summaries
 # ---------------------------------------------------------------------------
 
-from nokshi.context import summaries as summaries_mod
 from nokshi.agents.providers import Completion
+from nokshi.context import summaries as summaries_mod
 from nokshi.context.summaries import structural_summary, summarize_files
 
 

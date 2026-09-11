@@ -55,12 +55,7 @@ def blank_out_noise(text: str) -> str:
     while i < n:
         ch = text[i]
         nxt = text[i + 1] if i + 1 < n else ""
-        if ch == "/" and nxt == "/":
-            j = text.find("\n", i)
-            j = n if j == -1 else j
-            out.append(" " * (j - i))
-            i = j
-        elif ch == "#" and not (nxt == "[" ):  # PHP/Python-style line comment (keep #[Attribute])
+        if ch == "/" and nxt == "/" or ch == "#" and nxt != "[":
             j = text.find("\n", i)
             j = n if j == -1 else j
             out.append(" " * (j - i))

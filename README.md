@@ -302,8 +302,12 @@ memory = 0.5
 
 ## Development
 
+See [docs/GUIDE.md](docs/GUIDE.md) for the quick guide (daily usage + release process)
+and [CHANGELOG.md](CHANGELOG.md) for release notes.
+
 ```bash
 pip install -e ".[dev]"
+ruff check nokshi tests
 pytest -q                    # 35 tests: parsers, graph, incremental index, ranking, budgets, redaction, worktrees, summaries, CLI
 ```
 

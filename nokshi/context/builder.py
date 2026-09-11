@@ -13,11 +13,11 @@ import json
 import re
 from dataclasses import dataclass, field
 
+from nokshi.context.ranking import Candidate, rank_files, tokenize
 from nokshi.core import tokens
 from nokshi.core.config import Config
 from nokshi.core.db import Database
 from nokshi.core.parsers import split_identifier
-from nokshi.context.ranking import Candidate, rank_files, tokenize
 
 FULL_TIER_MAX_FILES = 12          # never dump more than this many whole files
 FULL_SCORE_RATIO = 0.35           # a file must score ≥ 35% of the best to earn full source

@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import re
 
-from .base import (Import, ParseResult, Parser, Symbol, blank_out_noise, line_of, match_brace,
-                   signature_until_brace)
+from .base import Import, Parser, ParseResult, Symbol, blank_out_noise, line_of, match_brace, signature_until_brace
 
 _IMPORT = re.compile(r"""(?:^|[;\s])import\s+(?:[^'";]*?\s+from\s+)?['"]([^'"]+)['"]""", re.M)
 _REQUIRE = re.compile(r"""require\(\s*['"]([^'"]+)['"]\s*\)""")

@@ -23,14 +23,15 @@ from pathlib import PurePosixPath
 from nokshi.core.config import Config
 from nokshi.core.db import Database
 from nokshi.core.graph import Graph
-from nokshi.core.parsers import STRUCTURAL_LANGUAGES as STRUCTURAL, split_identifier
+from nokshi.core.parsers import STRUCTURAL_LANGUAGES as STRUCTURAL
+from nokshi.core.parsers import split_identifier
 
 STOPWORDS = {
     "the", "a", "an", "to", "for", "of", "in", "on", "and", "or", "with", "add", "create", "make", "new",
     "update", "fix", "change", "implement", "support", "should", "when", "that", "this", "is", "are", "be",
     "it", "into", "from", "by", "as", "at", "so", "we", "i", "use", "using", "via", "our", "my",
     "file", "files", "code", "please", "need", "want", "can", "feature", "bug", "issue", "error",
-    "where", "when", "does", "doesn", "do", "not", "no", "if", "then", "than", "but", "also", "only", "all",
+    "where", "does", "doesn", "do", "not", "no", "if", "then", "than", "but", "also", "only", "all",
     "any", "some", "how", "what", "which", "who", "why", "will", "would", "could", "have", "has", "had",
     "been", "was", "were", "get", "set", "run", "runs", "work", "works", "working", "correctly", "properly",
     "currently", "still", "after", "before", "instead", "like", "just", "very", "more", "less", "same",
@@ -172,7 +173,7 @@ def rank_files(cfg: Config, db: Database, task: str, explicit_files: list[str] |
         elif any(n in raw_words and _looks_like_identifier(n) for n in defs.get(fid, [])):
             c.add("explicit_reference", w.explicit_reference * 0.6)
     for p in explicit_files or []:
-        for fid, c in cands.items():
+        for c in cands.values():
             if c.path == p or c.path.endswith("/" + p) or PurePosixPath(c.path).name == p:
                 c.add("explicit_reference", w.explicit_reference * 1.5)
 
@@ -182,7 +183,7 @@ def rank_files(cfg: Config, db: Database, task: str, explicit_files: list[str] |
         memory_text += " " + cfg.rules_path.read_text(encoding="utf-8", errors="replace")
     if memory_text.strip():
         mem_words = set(_WORD.findall(memory_text))
-        for fid, c in cands.items():
+        for c in cands.values():
             stem = PurePosixPath(c.path).stem.split(".")[0]
             if c.path in memory_text or (len(stem) >= 6 and stem in mem_words and stem in raw_words):
                 c.add("memory", w.memory)

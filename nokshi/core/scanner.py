@@ -16,9 +16,9 @@ import os
 import re
 import subprocess
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
-from typing import Callable
 
 from nokshi.core import tokens
 from nokshi.core.config import Config
@@ -214,8 +214,8 @@ _TERM_STOP = {
     "use", "namespace", "using", "get", "set", "value", "type", "name", "data", "key", "item", "list", "dict",
     "object", "result", "response", "request", "error", "exception", "throw", "try", "catch", "finally",
     "foreach", "while", "break", "continue", "case", "switch", "extends", "implements", "interface", "abstract",
-    "final", "override", "virtual", "readonly", "var", "param", "params", "args", "kwargs", "http", "https",
-    "com", "org", "www", "html", "div", "span", "className", "props", "state", "this", "console", "log",
+    "final", "override", "virtual", "readonly", "param", "params", "args", "kwargs", "http", "https",
+    "com", "org", "www", "html", "div", "span", "className", "props", "state", "console", "log",
 }
 TERMS_PER_FILE = 400
 

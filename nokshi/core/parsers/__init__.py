@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import PurePosixPath
 
-from .base import Import, ParseResult, Parser, Symbol, split_identifier
+from .base import Import, Parser, ParseResult, Symbol, split_identifier
 from .csharp import CSharpParser
 from .javascript import JavaScriptParser
 from .php import PhpParser
